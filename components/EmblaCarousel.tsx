@@ -1,18 +1,21 @@
 'use client'
 
-import React, { useCallback } from 'react'
-import { EmblaOptionsType, EmblaCarouselType } from 'embla-carousel'
-import { DotButton, useDotButton } from './EmblaCarouselDotButton'
+import React, {useCallback} from 'react'
+import {EmblaOptionsType, EmblaCarouselType} from 'embla-carousel'
+import {DotButton, useDotButton} from './EmblaCarouselDotButton'
 import Autoplay from 'embla-carousel-autoplay'
 import useEmblaCarousel from 'embla-carousel-react'
 
 type PropType = {
     slides: number[]
     options?: EmblaOptionsType
+    requireText: boolean;
+    heading?: string;
+    description?: string;
 }
 
 const EmblaCarousel: React.FC<PropType> = (props) => {
-    const { slides, options } = props
+    const {slides, options, requireText, heading, description} = props
     const [emblaRef, emblaApi] = useEmblaCarousel(options, [Autoplay()])
 
     const onNavButtonClick = useCallback((emblaApi: EmblaCarouselType) => {
@@ -27,7 +30,7 @@ const EmblaCarousel: React.FC<PropType> = (props) => {
         resetOrStop()
     }, [])
 
-    const { selectedIndex, scrollSnaps, onDotButtonClick } = useDotButton(
+    const {selectedIndex, scrollSnaps, onDotButtonClick} = useDotButton(
         emblaApi,
         onNavButtonClick
     )
@@ -43,6 +46,13 @@ const EmblaCarousel: React.FC<PropType> = (props) => {
                     ))}
                 </div>
             </div>
+
+            {requireText &&
+                <div className='my-10 flex flex-col justify-center gap-5'>
+                  <h1 className='text-3xl text-center font-bold'>{heading}</h1>
+                  <p className='text-center'>{description}</p>
+                </div>
+            }
 
             <div className="embla__controls">
                 <div className="embla__dots">
