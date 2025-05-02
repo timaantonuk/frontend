@@ -23,7 +23,7 @@ function OnboardingPage({}) {
   };
 
   return (
-    <section>
+    <section className="mainContainer relative min-h-screen overflow-x-hidden">
       <article className="relative flex h-full flex-col justify-between gap-10 transition duration-300 ease-in-out">
         <SkipBtn onClickFn={onButtonClick} />
 
