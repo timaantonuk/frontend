@@ -55,7 +55,9 @@ const EmblaCarousel: React.FC<PropType> = props => {
             <DotButton
               key={index}
               onClick={() => onDotButtonClick(index)}
-              className={'embla__dot'.concat(index === selectedIndex ? 'embla__dot--selected' : '')}
+              className={'embla__dot'.concat(
+                index === selectedIndex ? ' embla__dot--selected' : ''
+              )}
             />
           ))}
         </div>

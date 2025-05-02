@@ -23,7 +23,7 @@ function OnboardingPage({}) {
   };
 
   return (
-    <section>
+    <section className="mainContainer relative min-h-screen overflow-x-hidden">
       <article className="relative flex h-full flex-col justify-between gap-10 transition duration-300 ease-in-out">
         <SkipBtn onClickFn={onButtonClick} />
 
@@ -53,11 +53,11 @@ function OnboardingPage({}) {
         <h1 className="headingMain mb-10">Обретите душевный покой с Depra</h1>
 
         <div className="flex justify-center gap-5">
-          <Button className="w-1/2">
+          <Button asChild className="w-1/2">
             <Link href="/login">Вход</Link>
           </Button>
-          <Button className="w-1/2" variant="outline">
-            <Link href="/register">Регистрация</Link>
+          <Button className="w-1/2" asChild variant="outline">
+            <Link href="/login">Регистрация</Link>
           </Button>
         </div>
       </article>
