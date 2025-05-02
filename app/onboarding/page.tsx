@@ -18,7 +18,7 @@ function OnboardingPage({}) {
   const [isClicked, setIsClicked] = useState(false);
 
   const onButtonClick = () => {
-    setIsClicked(prevState => true);
+    setIsClicked(true);
     console.log(isClicked);
   };
 
@@ -30,6 +30,7 @@ function OnboardingPage({}) {
         <div className="flex flex-col justify-center gap-10">
           <EmblaCarousel
             slides={SLIDES}
+            options={OPTIONS}
             requireText={true}
             heading="Depra - приложение для поддержки"
             description="bla-bla-bla-bla-bla-bla-bla-bla"
