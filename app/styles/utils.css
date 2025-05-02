@@ -1,20 +1,16 @@
 @keyframes slideToLeft {
+  from {
+    left: 100%;
+  }
 
-    from {
-        left: 100%;
-    }
-
-    to {
-        left: 0;
-    }
-
+  to {
+    left: 0;
+  }
 }
-
 
 .slidingAnimation {
-    animation: slideToLeft;
-    animation-duration: 1.2s;
-    animation-fill-mode: forwards;
-    display: block;
+  animation: slideToLeft;
+  animation-duration: 1.2s;
+  animation-fill-mode: forwards;
+  display: block;
 }
-
