@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -42,7 +42,6 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
-
 
 :root {
   --radius: 1rem;
@@ -113,7 +112,6 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -124,9 +122,9 @@
 }
 
 .headingMain {
-  @apply text-3xl font-bold
+  @apply text-3xl font-bold;
 }
 
 .mainContainer {
-  @apply w-screen h-screen px-6 py-10
+  @apply h-screen w-screen px-6 py-10;
 }
