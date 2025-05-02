@@ -13,7 +13,7 @@
 
 .slidingAnimation {
     animation: slideToLeft;
-    animation-duration: 2s;
+    animation-duration: 1.2s;
     animation-fill-mode: forwards;
     display: block;
 }

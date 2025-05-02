@@ -49,7 +49,7 @@ const EmblaCarousel: React.FC<PropType> = (props) => {
 
             {requireText &&
                 <div className='my-10 flex flex-col justify-center gap-5'>
-                  <h1 className='text-3xl text-center font-bold'>{heading}</h1>
+                  <h1 className='headingMain text-center'>{heading}</h1>
                   <p className='text-center'>{description}</p>
                 </div>
             }

@@ -123,4 +123,10 @@
   }
 }
 
+.headingMain {
+  @apply text-3xl font-bold
+}
 
+.mainContainer {
+  @apply w-screen h-screen px-6 py-10
+}
