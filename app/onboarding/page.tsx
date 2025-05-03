@@ -57,7 +57,7 @@ function OnboardingPage({}) {
             <Link href="/login">Вход</Link>
           </Button>
           <Button className="w-1/2" asChild variant="outline">
-            <Link href="/login">Регистрация</Link>
+            <Link href="/register">Регистрация</Link>
           </Button>
         </div>
       </article>
