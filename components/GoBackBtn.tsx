@@ -7,7 +7,7 @@ type TSkipBtnProps = {
   to: string;
 };
 
-function SkipBtn({ to }: TSkipBtnProps) {
+function GoBackBtn({ to }: TSkipBtnProps) {
   return (
     <Button onClick={() => redirect(`${to}`)} variant="ghost" className="self-end">
       Назад
@@ -15,4 +15,4 @@ function SkipBtn({ to }: TSkipBtnProps) {
   );
 }
 
-export default SkipBtn;
+export default GoBackBtn;
