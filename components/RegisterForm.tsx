@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,14 +20,20 @@ import SkipBtn from '@/components/SkipBtn';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-const FormSchema = z.object({
-  email: z.string().min(1, 'Email обязателен').email('Некорректный email'),
-
-  password: z
-    .string()
-    .min(6, 'Пароль должен быть не менее 6 символов')
-    .max(100, 'Пароль слишком длинный'),
-});
+const FormSchema = z
+  .object({
+    name: z.string().min(1, 'Имя обязательно'),
+    email: z.string().min(1, 'Email обязателен').email('Некорректный email'),
+    password: z
+      .string()
+      .min(6, 'Пароль должен быть не менее 6 символов')
+      .max(100, 'Пароль слишком длинный'),
+    confirmPassword: z.string().min(1, 'Подтвердите пароль'),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: 'Пароли не совпадают',
+    path: ['confirmPassword'],
+  });
 
 const socialNetworks = [
   {
@@ -45,17 +50,21 @@ const socialNetworks = [
   },
 ];
 
-export function LoginForm() {
+export function RegisterForm() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
+      confirmPassword: '',
     },
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast('You submitted the following values:');
+    toast.success('Вы успешно зарегистрированы');
+    // REGISTRATION LOGIC
+    redirect('/verify-email');
   }
 
   return (
@@ -67,11 +76,25 @@ export function LoginForm() {
       />
 
       <div className="mb-10">
-        <h1 className="headingMain mb-2">Авторизоваться</h1>
-        <p>Войдите в систему, чтобы вернуться к</p>
+        <h1 className="headingMain mb-2">Создать аккаунт</h1>
+        <p>Присоединяйтесь к нам, чтобы начать</p>
       </div>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Имя</FormLabel>
+              <FormControl>
+                <Input placeholder="Ваше имя" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="email"
@@ -91,7 +114,7 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Пароль</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
@@ -99,8 +122,23 @@ export function LoginForm() {
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Подтвердите пароль</FormLabel>
+              <FormControl>
+                <Input type="password" placeholder="••••••••" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <Button type="submit" className="w-full">
-          Войти
+          Зарегистрироваться
         </Button>
       </form>
 
@@ -116,9 +154,9 @@ export function LoginForm() {
       </div>
 
       <p>
-        Нет аккаунта?{' '}
-        <Link href="/register">
-          <span className="underline font-bold">Зарегистрируйтесь</span>
+        Уже есть аккаунт?{' '}
+        <Link href="/login">
+          <span className="underline font-bold">Войдите</span>
         </Link>
       </p>
     </Form>

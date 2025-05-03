@@ -1,5 +1,11 @@
+import { RegisterForm } from '@/components/RegisterForm';
+
 function Page({}) {
-  return <section>Register page to be continued...</section>;
+  return (
+    <section className="mainContainer flex items-center flex-col gap-5">
+      <RegisterForm />
+    </section>
+  );
 }
 
 export default Page;
