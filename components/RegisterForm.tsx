@@ -64,6 +64,7 @@ export function RegisterForm() {
   function onSubmit(data: z.infer<typeof FormSchema>) {
     toast.success('Вы успешно зарегистрированы');
     // REGISTRATION LOGIC
+    console.log(data);
     redirect('/verify-email');
   }
 
