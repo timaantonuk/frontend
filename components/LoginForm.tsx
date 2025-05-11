@@ -17,8 +17,9 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import SkipBtn from '@/components/SkipBtn';
-import { redirect } from 'next/navigation';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const FormSchema = z.object({
   email: z.string().min(1, 'Email обязателен').email('Некорректный email'),
@@ -45,6 +46,8 @@ const socialNetworks = [
 ];
 
 export function LoginForm() {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -62,7 +65,7 @@ export function LoginForm() {
     <Form {...form}>
       <SkipBtn
         onClickFn={() => {
-          redirect('/');
+          router.push('/');
         }}
       />
 

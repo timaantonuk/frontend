@@ -1,15 +1,17 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 type TSkipBtnProps = {
   to: string;
 };
 
 function GoBackBtn({ to }: TSkipBtnProps) {
+  const router = useRouter();
+
   return (
-    <Button onClick={() => redirect(`${to}`)} variant="ghost" className="self-end">
+    <Button onClick={() => router.push(`${to}`)} variant="ghost" className="self-end">
       Назад
     </Button>
   );

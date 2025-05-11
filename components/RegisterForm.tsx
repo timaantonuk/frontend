@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import SkipBtn from '@/components/SkipBtn';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const FormSchema = z
@@ -51,6 +51,8 @@ const socialNetworks = [
 ];
 
 export function RegisterForm() {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -65,14 +67,14 @@ export function RegisterForm() {
     toast.success('Вы успешно зарегистрированы');
     // REGISTRATION LOGIC
     console.log(data);
-    redirect('/verify-email');
+    router.push('/verify-email');
   }
 
   return (
     <Form {...form}>
       <SkipBtn
         onClickFn={() => {
-          redirect('/');
+          router.push('/');
         }}
       />
 
