@@ -125,6 +125,10 @@
   @apply text-3xl font-bold;
 }
 
+.headingSecondary {
+  @apply text-2xl font-bold
+}
+
 .mainContainer {
   @apply h-screen w-screen px-6 py-10;
 }
