@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
-import { addMonths, addWeeks, format } from 'date-fns';
+import { addMonths, addWeeks, format, startOfWeek } from 'date-fns';
 
 // Types
 type CalendarView = 'week' | 'month';
@@ -21,6 +21,7 @@ type CalendarState = {
   events: Record<string, boolean>;
   direction: number; // -1 for left, 1 for right, 0 for initial
   isAnimating: boolean;
+  isVisible: boolean; // For initial appearance animation
 };
 
 type CalendarAction =
@@ -29,7 +30,8 @@ type CalendarAction =
   | { type: 'NEXT_PERIOD' }
   | { type: 'TOGGLE_EXPANDED' }
   | { type: 'SET_EVENTS'; payload: Record<string, boolean> }
-  | { type: 'ANIMATION_COMPLETE' };
+  | { type: 'ANIMATION_COMPLETE' }
+  | { type: 'SHOW_CALENDAR' };
 
 // Initial state
 const initialState: CalendarState = {
@@ -40,12 +42,26 @@ const initialState: CalendarState = {
   events: {},
   direction: 0,
   isAnimating: false,
+  isVisible: false,
 };
 
 // Reducer
 function calendarReducer(state: CalendarState, action: CalendarAction): CalendarState {
   switch (action.type) {
     case 'SELECT_DATE':
+      // When selecting a date in month view, switch to week view
+      if (state.isExpanded) {
+        // Calculate the start of the week containing the selected date
+        const weekStart = startOfWeek(action.payload, { weekStartsOn: 1 });
+
+        return {
+          ...state,
+          selectedDate: action.payload,
+          viewDate: weekStart,
+          isExpanded: false, // Collapse to week view
+        };
+      }
+
       return {
         ...state,
         selectedDate: action.payload,
@@ -84,6 +100,11 @@ function calendarReducer(state: CalendarState, action: CalendarAction): Calendar
       return {
         ...state,
         isAnimating: false,
+      };
+    case 'SHOW_CALENDAR':
+      return {
+        ...state,
+        isVisible: true,
       };
     default:
       return state;

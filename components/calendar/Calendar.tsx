@@ -35,16 +35,43 @@ const expandVariants = {
   expanded: { height: '22rem' },
 };
 
+// Initial appearance animation
+const appearanceVariants = {
+  hidden: {
+    opacity: 0,
+    y: -20,
+    scale: 0.95,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1], // Custom cubic-bezier for a pleasant spring-like effect
+    },
+  },
+};
+
 function CalendarContent() {
   const { state, dispatch } = useCalendar();
-  const { viewDate, isExpanded, direction, isAnimating } = state;
+  const { viewDate, isExpanded, direction, isAnimating, isVisible } = state;
+
+  // Trigger initial appearance animation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      dispatch({ type: 'SHOW_CALENDAR' });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [dispatch]);
 
   // Handle animation completion
   useEffect(() => {
     if (isAnimating) {
       const timer = setTimeout(() => {
         dispatch({ type: 'ANIMATION_COMPLETE' });
-      }, 300); // Match with animation duration
+      }, 500); // Increased animation duration
 
       return () => clearTimeout(timer);
     }
@@ -78,45 +105,51 @@ function CalendarContent() {
         )}
       </AnimatePresence>
 
-      {/* Calendar container */}
+      {/* Calendar container with initial appearance animation */}
       <div className="relative w-full z-[20]">
         <motion.div
-          variants={expandVariants}
-          initial="collapsed"
-          animate={isExpanded ? 'expanded' : 'collapsed'}
-          transition={{ duration: 0.5, ease: 'easeInOut' }}
-          className={`
-            flex flex-col w-full rounded-2xl bg-white px-4 py-3 shadow-md overflow-hidden
-            ${isExpanded ? 'absolute top-0 left-0 right-0' : 'relative'}
-          `}
+          variants={appearanceVariants}
+          initial="hidden"
+          animate={isVisible ? 'visible' : 'hidden'}
         >
-          <CalendarHeader />
+          <motion.div
+            variants={expandVariants}
+            initial="collapsed"
+            animate={isExpanded ? 'expanded' : 'collapsed'}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
+            className={`
+              flex flex-col w-full rounded-2xl bg-white px-4 py-3 shadow-md overflow-hidden
+              ${isExpanded ? 'absolute top-0 left-0 right-0' : 'relative'}
+            `}
+          >
+            <CalendarHeader />
 
-          <div className="relative overflow-hidden flex-1">
-            <SwipeDetector
-              onSwipeLeft={handleSwipeLeft}
-              onSwipeRight={handleSwipeRight}
-              disabled={isAnimating}
-            >
-              <AnimatePresence initial={false} mode="sync" custom={direction}>
-                <motion.div
-                  key={viewDate.toISOString()}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    duration: 0.3,
-                    ease: 'easeInOut',
-                  }}
-                  className="w-full absolute left-0 right-0"
-                >
-                  <CalendarGrid isMonthView={isExpanded} />
-                </motion.div>
-              </AnimatePresence>
-            </SwipeDetector>
-          </div>
+            <div className="relative overflow-hidden flex-1">
+              <SwipeDetector
+                onSwipeLeft={handleSwipeLeft}
+                onSwipeRight={handleSwipeRight}
+                disabled={isAnimating}
+              >
+                <AnimatePresence initial={false} mode="sync" custom={direction}>
+                  <motion.div
+                    key={viewDate.toISOString() + (isExpanded ? '-month' : '-week')}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      duration: 0.5, // Slower animation
+                      ease: 'easeInOut',
+                    }}
+                    className="w-full absolute left-0 right-0"
+                  >
+                    <CalendarGrid isMonthView={isExpanded} />
+                  </motion.div>
+                </AnimatePresence>
+              </SwipeDetector>
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </>

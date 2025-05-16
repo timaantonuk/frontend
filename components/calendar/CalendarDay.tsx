@@ -3,10 +3,24 @@
 import type React from 'react';
 import { format, isToday, isSameDay, isSameMonth } from 'date-fns';
 import { useCalendar } from '@/app/contexts/calendar-context';
+import { motion } from 'framer-motion';
 
 type CalendarDayProps = {
   date: Date;
   isMonthView?: boolean;
+};
+
+// Animation for day selection
+const selectedDayVariants = {
+  initial: { scale: 0.9 },
+  selected: {
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 15,
+    },
+  },
 };
 
 export function CalendarDay({ date, isMonthView = false }: CalendarDayProps) {
@@ -27,8 +41,10 @@ export function CalendarDay({ date, isMonthView = false }: CalendarDayProps) {
 
   if (isMonthView) {
     return (
-      <div
+      <motion.div
         onClick={handleClick}
+        animate={isSelected ? 'selected' : 'initial'}
+        variants={selectedDayVariants}
         className={`
           flex items-center relative justify-center cursor-pointer transition-all
           ${isSelected ? 'bg-green-200 rounded-sm' : ''}
@@ -41,13 +57,15 @@ export function CalendarDay({ date, isMonthView = false }: CalendarDayProps) {
         {hasEventMark && (
           <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-700 rounded-full" />
         )}
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div
+    <motion.div
       onClick={handleClick}
+      animate={isSelected ? 'selected' : 'initial'}
+      variants={selectedDayVariants}
       className={`
         flex-1 relative flex items-center justify-center cursor-pointer transition-all
         ${isSelected ? 'bg-green-200 rounded-xl' : ''}
@@ -59,6 +77,6 @@ export function CalendarDay({ date, isMonthView = false }: CalendarDayProps) {
       {hasEventMark && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-700 rounded-full" />
       )}
-    </div>
+    </motion.div>
   );
 }
