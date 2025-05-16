@@ -1,3 +1,5 @@
+'use client';
+
 import { ArrowLeft, ChartArea, Plus, Settings2 } from 'lucide-react';
 import RoundedButton from '@/components/RoundedButton';
 import DiaryCalendar from '@/components/DiaryCalendar';
@@ -23,6 +25,7 @@ function Page({}) {
             '2025-05-15': true,
             '2025-05-12': true,
           }}
+          onDateSelect={date => console.log('Selected date:', date)}
         />
       </div>
 
