@@ -14,7 +14,7 @@ import {
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { AnimatePresence, motion, useAnimation } from 'framer-motion';
+import { AnimatePresence, motion, PanInfo, useAnimation } from 'framer-motion';
 
 // Component props type
 type DiaryCalendarProps = {
@@ -102,11 +102,11 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
   };
 
   // Handle swipe gestures
-  const handleDragEnd = (e: any, { offset }: any) => {
-    if (offset.x < -50) {
+  const handleDragEnd = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x < -50) {
       navigateToNext();
       controls.start({ x: 0 });
-    } else if (offset.x > 50) {
+    } else if (info.offset.x > 50) {
       navigateToPrevious();
       controls.start({ x: 0 });
     } else {
