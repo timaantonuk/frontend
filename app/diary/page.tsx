@@ -18,7 +18,12 @@ function Page({}) {
       </nav>
 
       <div>
-        <DiaryCalendar />
+        <DiaryCalendar
+          events={{
+            '2025-05-15': true,
+            '2025-05-12': true,
+          }}
+        />
       </div>
 
       <footer className="flex justify-between">
