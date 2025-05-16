@@ -3,6 +3,7 @@
 import { ArrowLeft, ChartArea, Plus, Settings2 } from 'lucide-react';
 import RoundedButton from '@/components/RoundedButton';
 import DiaryCalendar from '@/components/DiaryCalendar';
+import Image from 'next/image';
 
 function Page({}) {
   return (
@@ -19,7 +20,7 @@ function Page({}) {
         </RoundedButton>
       </nav>
 
-      <div>
+      <div className="flex flex-col h-full gap-24">
         <DiaryCalendar
           events={{
             '2025-05-15': true,
@@ -27,6 +28,11 @@ function Page({}) {
           }}
           onDateSelect={date => console.log('Selected date:', date)}
         />
+
+        <div className="absolute top-1/2 left-1/2 -translate-1/2 flex flex-col items-center w-full gap-4">
+          <Image src="/img-prototype.png" width={200} height={200} alt="diary" />
+          <h1 className="headingMain">Добавьте запись</h1>
+        </div>
       </div>
 
       <footer className="flex justify-between">

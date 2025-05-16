@@ -23,7 +23,6 @@ import {
   useTransform,
 } from 'framer-motion';
 
-// Component props type
 type DiaryCalendarProps = {
   events?: Record<string, boolean>;
   onDateSelect?: (date: Date) => void;
@@ -131,7 +130,7 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
       >
         <div className="text-center">{dayNumber}</div>
         {events[format(day, 'yyyy-MM-dd')] && (
-          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-red-700 rounded-full" />
+          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-700 rounded-full" />
         )}
       </div>
     );
@@ -146,104 +145,109 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
             animate={{ opacity: 0.2 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 bg-black z-[1]"
+            className="fixed inset-0 bg-black z-[10]"
             onClick={() => setIsExpanded(false)}
           />
         )}
       </AnimatePresence>
 
-      <motion.div
-        ref={calendarRef}
-        className={`flex flex-col w-full rounded-2xl transition-all duration-700 bg-white px-4 py-3 relative z-10 overflow-hidden shadow-md h-[10rem] ${
-          isExpanded ? 'h-[20rem]' : ''
-        }`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={navigateToPrevious}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Предыдущий период"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <motion.div onClick={handleMonthClick} className="flex gap-1 items-center cursor-pointer">
-            <p className="font-semibold text-lg">{monthAndYearToDisplay}</p>
-            <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown size={15} />
-            </motion.div>
-          </motion.div>
-
-          <button
-            onClick={navigateToNext}
-            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Следующий период"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
-
-        {/* Calendar View */}
+      {/* 👇 Relative wrapper keeps absolute calendar aligned */}
+      <div className="relative w-full z-[20]">
         <motion.div
-          layout
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.1}
-          style={{ x, opacity }}
-          onDragEnd={handleDragEnd}
-          animate={controls}
-          className="w-full"
+          ref={calendarRef}
+          className={`
+            flex flex-col w-full rounded-2xl bg-white px-4 py-3 shadow-md overflow-hidden transition-all duration-700
+            ${isExpanded ? 'absolute top-0 left-0 right-0 h-[22rem]' : 'relative h-[10rem]'}
+          `}
         >
-          <AnimatePresence mode="wait">
-            {isExpanded ? (
-              <motion.div
-                key="month"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-                className="w-full"
-              >
-                <div className="grid grid-cols-7 mb-2 text-center text-sm text-gray-500">
-                  {weekdayHeaders.map((day, index) => (
-                    <div key={index}>{day}</div>
-                  ))}
-                </div>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={navigateToPrevious}
+              className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Предыдущий период"
+            >
+              <ChevronLeft size={20} />
+            </button>
 
-                <div className="grid grid-cols-7 gap-1">
-                  {monthDays.map(day => (
-                    <MonthDayCell key={day.toISOString()} day={day} />
-                  ))}
-                </div>
+            <motion.div
+              onClick={handleMonthClick}
+              className="flex gap-1 items-center cursor-pointer"
+            >
+              <p className="font-semibold text-lg">{monthAndYearToDisplay}</p>
+              <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                <ChevronDown size={15} />
               </motion.div>
-            ) : (
-              <motion.div
-                key="week"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.3 }}
-                className="w-full"
-              >
-                <div className="flex w-full mb-2 text-center text-sm text-gray-500">
-                  {weekdayHeaders.map((day, index) => (
-                    <div key={index} className="flex-1">
-                      {day}
-                    </div>
-                  ))}
-                </div>
+            </motion.div>
 
-                <div className="flex w-full">
-                  {weekDays.map(day => (
-                    <WeekDayCell key={day.toISOString()} day={day} />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <button
+              onClick={navigateToNext}
+              className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Следующий период"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+
+          {/* Calendar View */}
+          <motion.div
+            layout
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.1}
+            style={{ x, opacity }}
+            onDragEnd={handleDragEnd}
+            animate={controls}
+            className="w-full"
+          >
+            <AnimatePresence mode="wait">
+              {isExpanded ? (
+                <motion.div
+                  key="month"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full"
+                >
+                  <div className="grid grid-cols-7 mb-2 text-center text-sm text-gray-500">
+                    {weekdayHeaders.map((day, index) => (
+                      <div key={index}>{day}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {monthDays.map(day => (
+                      <MonthDayCell key={day.toISOString()} day={day} />
+                    ))}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="week"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full"
+                >
+                  <div className="flex w-full mb-2 text-center text-sm text-gray-500">
+                    {weekdayHeaders.map((day, index) => (
+                      <div key={index} className="flex-1">
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex w-full">
+                    {weekDays.map(day => (
+                      <WeekDayCell key={day.toISOString()} day={day} />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
     </>
   );
 }
