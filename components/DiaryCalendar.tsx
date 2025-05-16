@@ -1,42 +1,50 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
-import {
-  addDays,
-  startOfWeek,
-  format,
-  isSameDay,
-  startOfMonth,
-  isSameMonth,
-  addMonths,
-  addWeeks,
-  isToday,
-} from 'date-fns';
+import type React from 'react';
+
+import { useRef, useMemo, useEffect, useState, useCallback } from 'react';
+import { addDays, startOfWeek, format, startOfMonth } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import {
-  AnimatePresence,
-  motion,
-  PanInfo,
-  useAnimation,
-  useMotionValue,
-  useTransform,
-} from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import WeekDayCell from '@/components/WeekDayCell';
+
+import MonthDayCell from '@/components/MonthDayCell';
+import { DiaryProvider, useDiary } from '@/app/contexts/diary-context';
 
 type DiaryCalendarProps = {
   events?: Record<string, boolean>;
   onDateSelect?: (date: Date) => void;
 };
 
-function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewDate, setViewDate] = useState(new Date());
-  const [isExpanded, setIsExpanded] = useState(false);
+const ANIMATION_DURATION = 0.3;
+
+// Animation variants
+const slideVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? '100%' : '-100%',
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? '100%' : '-100%',
+    opacity: 0,
+  }),
+};
+
+function DiaryCalendarContent() {
+  const { state, dispatch } = useDiary();
+  const { viewDate, isExpanded, direction } = state;
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
   const calendarRef = useRef<HTMLDivElement>(null);
 
-  const controls = useAnimation();
-  const x = useMotionValue(0);
-  const opacity = useTransform(x, [-70, 0, 70], [0.04, 1, 0.04]);
+  // Minimum swipe distance (in px) to trigger navigation
+  const minSwipeDistance = 50;
 
   const formatMonthYear = (date: Date) => format(date, 'LLLL yyyy', { locale: ru });
 
@@ -45,17 +53,19 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
     return label === 'суб' ? label.slice(0, 1) + label.slice(2) : label.slice(0, 2);
   };
 
-  const weekDays = useMemo(() => {
+  // Generate calendar data for current view
+  const currentWeekDays = useMemo(() => {
     const weekStart = startOfWeek(viewDate, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [viewDate]);
 
-  const monthDays = useMemo(() => {
+  const currentMonthDays = useMemo(() => {
     const firstDay = startOfMonth(viewDate);
     const startDay = startOfWeek(firstDay, { weekStartsOn: 1 });
     return Array.from({ length: 35 }, (_, i) => addDays(startDay, i));
   }, [viewDate]);
 
+  // Generate weekday headers (static)
   const weekdayHeaders = useMemo(() => {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => getWeekdayLabel(addDays(weekStart, i)));
@@ -63,77 +73,123 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
 
   const monthAndYearToDisplay = formatMonthYear(viewDate);
 
-  const navigateToPrevious = () => {
-    setViewDate(prev => (isExpanded ? addMonths(prev, -1) : addWeeks(prev, -1)));
+  const navigateToPrevious = useCallback(() => {
+    if (!state.isNavigating) {
+      dispatch({ type: 'NAVIGATE_PREVIOUS' });
+    }
+  }, [dispatch, state.isNavigating]);
+
+  const navigateToNext = useCallback(() => {
+    if (!state.isNavigating) {
+      dispatch({ type: 'NAVIGATE_NEXT' });
+    }
+  }, [dispatch, state.isNavigating]);
+
+  const handleMonthClick = () => {
+    dispatch({ type: 'TOGGLE_EXPANDED' });
   };
 
-  const navigateToNext = () => {
-    setViewDate(prev => (isExpanded ? addMonths(prev, 1) : addWeeks(prev, 1)));
+  // Touch event handlers for swipe detection
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
   };
 
-  const handleMonthClick = () => setIsExpanded(prev => !prev);
-
-  const handleSelectedDayClick = (day: Date) => {
-    setSelectedDate(day);
-    setViewDate(day);
-    if (onDateSelect) onDateSelect(day);
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
   };
 
-  const handleDragEnd = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x < -70) {
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
       navigateToNext();
-    } else if (info.offset.x > 70) {
+    } else if (isRightSwipe) {
       navigateToPrevious();
     }
-    controls.start({ x: 0 });
   };
 
-  const WeekDayCell = ({ day }: { day: Date }) => {
-    const dayNumber = format(day, 'd');
-    const isSelected = isSameDay(selectedDate, day);
-    const isCurrentDay = isToday(day);
+  // Mouse event handlers for swipe detection
+  const [mouseDown, setMouseDown] = useState<number | null>(null);
+  const [mouseUp, setMouseUp] = useState<number | null>(null);
 
-    return (
-      <div
-        onClick={() => handleSelectedDayClick(day)}
-        className={`
-          flex-1 relative flex items-center justify-center cursor-pointer transition-all
-          ${isSelected ? 'bg-green-200 rounded-xl' : ''}
-          ${isCurrentDay && !isSelected ? 'font-bold' : ''}
-          h-14
-        `}
-      >
-        {events[format(day, 'yyyy-MM-dd')] && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-700 rounded-full" />
-        )}
-        <div className="text-center text-lg">{dayNumber}</div>
-      </div>
-    );
+  const onMouseDown = (e: React.MouseEvent) => {
+    setMouseUp(null);
+    setMouseDown(e.clientX);
   };
 
-  const MonthDayCell = ({ day }: { day: Date }) => {
-    const dayNumber = format(day, 'd');
-    const isSelected = isSameDay(selectedDate, day);
-    const isCurrentMonth = isSameMonth(day, viewDate);
-    const isCurrentDay = isToday(day);
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (mouseDown === null) return;
+    setMouseUp(e.clientX);
+  };
 
-    return (
-      <div
-        onClick={() => handleSelectedDayClick(day)}
-        className={`
-          flex items-center relative justify-center cursor-pointer transition-all
-          ${isSelected ? 'bg-green-200 rounded-sm' : ''}
-          ${!isCurrentMonth ? 'text-gray-400' : ''}
-          ${isCurrentDay && !isSelected ? 'font-bold' : ''}
-          h-10
-        `}
-      >
-        <div className="text-center">{dayNumber}</div>
-        {events[format(day, 'yyyy-MM-dd')] && (
-          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-700 rounded-full" />
-        )}
-      </div>
-    );
+  const onMouseUp = () => {
+    if (!mouseDown || !mouseUp) return;
+
+    const distance = mouseDown - mouseUp;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      navigateToNext();
+    } else if (isRightSwipe) {
+      navigateToPrevious();
+    }
+
+    setMouseDown(null);
+    setMouseUp(null);
+  };
+
+  useEffect(() => {
+    // Reset navigation state after animation completes
+    if (state.isNavigating) {
+      const timer = setTimeout(() => {
+        dispatch({ type: 'RESET_NAVIGATION' });
+      }, ANIMATION_DURATION * 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [state.isNavigating, dispatch]);
+
+  // Create calendar content based on view mode
+  const renderCalendarContent = () => {
+    if (isExpanded) {
+      return (
+        <div className="w-full">
+          <div className="grid grid-cols-7 mb-2 text-center text-sm text-gray-500">
+            {weekdayHeaders.map((day, index) => (
+              <div key={index}>{day}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {currentMonthDays.map(day => (
+              <MonthDayCell key={day.toISOString()} day={day} />
+            ))}
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="w-full">
+          <div className="flex w-full mb-2 text-center text-sm text-gray-500">
+            {weekdayHeaders.map((day, index) => (
+              <div key={index} className="flex-1">
+                {day}
+              </div>
+            ))}
+          </div>
+          <div className="flex w-full">
+            {currentWeekDays.map(day => (
+              <WeekDayCell key={day.toISOString()} day={day} />
+            ))}
+          </div>
+        </div>
+      );
+    }
   };
 
   return (
@@ -146,14 +202,14 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
             className="fixed inset-0 bg-black z-[10]"
-            onClick={() => setIsExpanded(false)}
+            onClick={() => dispatch({ type: 'TOGGLE_EXPANDED' })}
           />
         )}
       </AnimatePresence>
 
       {/* 👇 Relative wrapper keeps absolute calendar aligned */}
       <div className="relative w-full z-[20]">
-        <motion.div
+        <div
           ref={calendarRef}
           className={`
             flex flex-col w-full rounded-2xl bg-white px-4 py-3 shadow-md overflow-hidden transition-all duration-700
@@ -170,15 +226,12 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
               <ChevronLeft size={20} />
             </button>
 
-            <motion.div
-              onClick={handleMonthClick}
-              className="flex gap-1 items-center cursor-pointer"
-            >
+            <div onClick={handleMonthClick} className="flex gap-1 items-center cursor-pointer">
               <p className="font-semibold text-lg">{monthAndYearToDisplay}</p>
               <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronDown size={15} />
               </motion.div>
-            </motion.div>
+            </div>
 
             <button
               onClick={navigateToNext}
@@ -189,66 +242,46 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
             </button>
           </div>
 
-          {/* Calendar View */}
-          <motion.div
-            layout
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.1}
-            style={{ x, opacity }}
-            onDragEnd={handleDragEnd}
-            animate={controls}
-            className="w-full"
+          {/* Calendar View with Swipe Animation */}
+          <div
+            className="relative overflow-hidden"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseUp}
           >
-            <AnimatePresence mode="wait">
-              {isExpanded ? (
-                <motion.div
-                  key="month"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full"
-                >
-                  <div className="grid grid-cols-7 mb-2 text-center text-sm text-gray-500">
-                    {weekdayHeaders.map((day, index) => (
-                      <div key={index}>{day}</div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {monthDays.map(day => (
-                      <MonthDayCell key={day.toISOString()} day={day} />
-                    ))}
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="week"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full"
-                >
-                  <div className="flex w-full mb-2 text-center text-sm text-gray-500">
-                    {weekdayHeaders.map((day, index) => (
-                      <div key={index} className="flex-1">
-                        {day}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex w-full">
-                    {weekDays.map(day => (
-                      <WeekDayCell key={day.toISOString()} day={day} />
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+            <AnimatePresence initial={false} mode="sync" custom={direction}>
+              <motion.div
+                key={viewDate.toISOString()}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  duration: ANIMATION_DURATION,
+                  ease: 'easeInOut',
+                }}
+                className="w-full"
+              >
+                {renderCalendarContent()}
+              </motion.div>
             </AnimatePresence>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </div>
     </>
+  );
+}
+
+function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
+  return (
+    <DiaryProvider initialEvents={events} onDateSelect={onDateSelect}>
+      <DiaryCalendarContent />
+    </DiaryProvider>
   );
 }
 

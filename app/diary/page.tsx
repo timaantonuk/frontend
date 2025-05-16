@@ -1,11 +1,23 @@
 'use client';
 
-import { ArrowLeft, ChartArea, Plus, Settings2 } from 'lucide-react';
+import { ArrowLeft, AreaChartIcon as ChartArea, Plus, Settings2 } from 'lucide-react';
 import RoundedButton from '@/components/RoundedButton';
-import DiaryCalendar from '@/components/DiaryCalendar';
+import { Calendar } from '@/components/calendar/Calendar';
 import Image from 'next/image';
+import { useState } from 'react';
 
-function Page({}) {
+export default function DiaryPage() {
+  // Sample events data
+  const [diaryEvents] = useState({
+    '2025-05-15': true,
+    '2025-05-12': true,
+  });
+
+  const handleDateSelect = (date: Date) => {
+    console.log('Selected date:', date);
+    // Handle date selection logic here
+  };
+
   return (
     <section className="mainContainer flex flex-col justify-between gap-5">
       <nav className="flex justify-between items-center">
@@ -21,13 +33,7 @@ function Page({}) {
       </nav>
 
       <div className="flex flex-col h-full gap-24">
-        <DiaryCalendar
-          events={{
-            '2025-05-15': true,
-            '2025-05-12': true,
-          }}
-          onDateSelect={date => console.log('Selected date:', date)}
-        />
+        <Calendar events={diaryEvents} onDateSelect={handleDateSelect} />
 
         <div className="absolute top-1/2 left-1/2 -translate-1/2 flex flex-col items-center w-full gap-4">
           <Image src="/img-prototype.png" width={200} height={200} alt="diary" />
@@ -47,5 +53,3 @@ function Page({}) {
     </section>
   );
 }
-
-export default Page;
