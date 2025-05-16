@@ -14,7 +14,14 @@ import {
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { AnimatePresence, motion, PanInfo, useAnimation } from 'framer-motion';
+import {
+  AnimatePresence,
+  motion,
+  PanInfo,
+  useAnimation,
+  useMotionValue,
+  useTransform,
+} from 'framer-motion';
 
 // Component props type
 type DiaryCalendarProps = {
@@ -27,94 +34,61 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
   const [viewDate, setViewDate] = useState(new Date());
   const [isExpanded, setIsExpanded] = useState(false);
   const calendarRef = useRef<HTMLDivElement>(null);
+
   const controls = useAnimation();
+  const x = useMotionValue(0);
+  const opacity = useTransform(x, [-70, 0, 70], [0.04, 1, 0.04]);
 
-  // Format date to month and year (e.g., "февраль 2025")
-  const formatMonthYear = (date: Date) => {
-    return format(date, 'LLLL yyyy', { locale: ru });
-  };
+  const formatMonthYear = (date: Date) => format(date, 'LLLL yyyy', { locale: ru });
 
-  // Get two-letter weekday label (e.g., "пн", "вт")
   const getWeekdayLabel = (date: Date) => {
-    const weekdayLabel = format(date, 'EE', { locale: ru }).toLowerCase();
-
-    if (weekdayLabel === 'суб') {
-      return weekdayLabel.slice(0, 1) + weekdayLabel.slice(2);
-    } else {
-      return weekdayLabel.slice(0, 2);
-    }
+    const label = format(date, 'EE', { locale: ru }).toLowerCase();
+    return label === 'суб' ? label.slice(0, 1) + label.slice(2) : label.slice(0, 2);
   };
 
-  // Memoized calculations for current week
   const weekDays = useMemo(() => {
     const weekStart = startOfWeek(viewDate, { weekStartsOn: 1 });
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   }, [viewDate]);
 
-  // Memoized calculations for current month with exactly 5 rows (35 days)
   const monthDays = useMemo(() => {
-    // Start from the first day of the month's week
-    const firstDayOfMonth = startOfMonth(viewDate);
-    const startDay = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
-
-    // Generate exactly 35 days (5 rows × 7 columns)
+    const firstDay = startOfMonth(viewDate);
+    const startDay = startOfWeek(firstDay, { weekStartsOn: 1 });
     return Array.from({ length: 35 }, (_, i) => addDays(startDay, i));
   }, [viewDate]);
 
-  // Weekday headers (only calculated once)
   const weekdayHeaders = useMemo(() => {
     const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-    return Array.from({ length: 7 }, (_, i) => {
-      const day = addDays(weekStart, i);
-      return getWeekdayLabel(day);
-    });
+    return Array.from({ length: 7 }, (_, i) => getWeekdayLabel(addDays(weekStart, i)));
   }, []);
 
-  // Month and year to display
   const monthAndYearToDisplay = formatMonthYear(viewDate);
 
-  // Navigation handlers
   const navigateToPrevious = () => {
-    if (isExpanded) {
-      setViewDate(prev => addMonths(prev, -1));
-    } else {
-      setViewDate(prev => addWeeks(prev, -1));
-    }
+    setViewDate(prev => (isExpanded ? addMonths(prev, -1) : addWeeks(prev, -1)));
   };
 
   const navigateToNext = () => {
-    if (isExpanded) {
-      setViewDate(prev => addMonths(prev, 1));
-    } else {
-      setViewDate(prev => addWeeks(prev, 1));
-    }
+    setViewDate(prev => (isExpanded ? addMonths(prev, 1) : addWeeks(prev, 1)));
   };
 
-  // Event handlers
-  const handleMonthClick = () => {
-    setIsExpanded(!isExpanded);
-  };
+  const handleMonthClick = () => setIsExpanded(prev => !prev);
 
   const handleSelectedDayClick = (day: Date) => {
     setSelectedDate(day);
-    setViewDate(day); // Update month when selecting a date
+    setViewDate(day);
     if (onDateSelect) onDateSelect(day);
   };
 
-  // Handle swipe gestures
   const handleDragEnd = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x < -50) {
+    if (info.offset.x < -70) {
       navigateToNext();
-      controls.start({ x: 0 });
-    } else if (info.offset.x > 50) {
+    } else if (info.offset.x > 70) {
       navigateToPrevious();
-      controls.start({ x: 0 });
-    } else {
-      controls.start({ x: 0 });
     }
+    controls.start({ x: 0 });
   };
 
-  // Day cell component for week view
   const WeekDayCell = ({ day }: { day: Date }) => {
     const dayNumber = format(day, 'd');
     const isSelected = isSameDay(selectedDate, day);
@@ -127,19 +101,17 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
           flex-1 relative flex items-center justify-center cursor-pointer transition-all
           ${isSelected ? 'bg-green-200 rounded-xl' : ''}
           ${isCurrentDay && !isSelected ? 'font-bold' : ''}
-        }
           h-14
         `}
       >
         {events[format(day, 'yyyy-MM-dd')] && (
-          <div className="absolute bottom-2 left-1/2 -translate-1/2 w-1 h-1 bg-green-700 rounded-full" />
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-green-700 rounded-full" />
         )}
         <div className="text-center text-lg">{dayNumber}</div>
       </div>
     );
   };
 
-  // Day cell component for month view
   const MonthDayCell = ({ day }: { day: Date }) => {
     const dayNumber = format(day, 'd');
     const isSelected = isSameDay(selectedDate, day);
@@ -159,7 +131,7 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
       >
         <div className="text-center">{dayNumber}</div>
         {events[format(day, 'yyyy-MM-dd')] && (
-          <div className="absolute bottom-0.5 left-1/2 -translate-1/2 w-1 h-1 bg-red-700 rounded-full" />
+          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-red-700 rounded-full" />
         )}
       </div>
     );
@@ -167,7 +139,6 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
 
   return (
     <>
-      {/* Overlay */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -181,16 +152,11 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
         )}
       </AnimatePresence>
 
-      {/* Calendar Container */}
       <motion.div
         ref={calendarRef}
-        layout="preserve-aspect"
-        initial={false}
-        transition={{
-          layout: { duration: 0.4, type: 'spring', bounce: 0 },
-          height: { duration: 0.4 },
-        }}
-        className="flex flex-col w-full rounded-2xl bg-white px-4 py-3 relative z-10 overflow-hidden shadow-md"
+        className={`flex flex-col w-full rounded-2xl transition-all duration-700 bg-white px-4 py-3 relative z-10 overflow-hidden shadow-md h-[10rem] ${
+          isExpanded ? 'h-[20rem]' : ''
+        }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -224,6 +190,7 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.1}
+          style={{ x, opacity }}
           onDragEnd={handleDragEnd}
           animate={controls}
           className="w-full"
@@ -238,14 +205,12 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
                 transition={{ duration: 0.3 }}
                 className="w-full"
               >
-                {/* Weekday headers */}
                 <div className="grid grid-cols-7 mb-2 text-center text-sm text-gray-500">
                   {weekdayHeaders.map((day, index) => (
                     <div key={index}>{day}</div>
                   ))}
                 </div>
 
-                {/* Month grid */}
                 <div className="grid grid-cols-7 gap-1">
                   {monthDays.map(day => (
                     <MonthDayCell key={day.toISOString()} day={day} />
@@ -261,7 +226,6 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
                 transition={{ duration: 0.3 }}
                 className="w-full"
               >
-                {/* Weekday headers */}
                 <div className="flex w-full mb-2 text-center text-sm text-gray-500">
                   {weekdayHeaders.map((day, index) => (
                     <div key={index} className="flex-1">
@@ -270,7 +234,6 @@ function DiaryCalendar({ events = {}, onDateSelect }: DiaryCalendarProps) {
                   ))}
                 </div>
 
-                {/* Week row */}
                 <div className="flex w-full">
                   {weekDays.map(day => (
                     <WeekDayCell key={day.toISOString()} day={day} />
