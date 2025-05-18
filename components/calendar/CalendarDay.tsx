@@ -48,7 +48,7 @@ export function CalendarDay({ date, isMonthView = false }: CalendarDayProps) {
         className={`
           flex items-center relative justify-center cursor-pointer transition-all
           ${isSelected ? 'bg-green-200 rounded-sm' : ''}
-          ${!isCurrentMonth ? 'text-gray-400' : ''}
+          ${!isCurrentMonth ? 'text-gray-400 hover:bg-gray-100' : 'hover:bg-gray-100'}
           ${isCurrentDay && !isSelected ? 'font-bold' : ''}
           h-10
         `}

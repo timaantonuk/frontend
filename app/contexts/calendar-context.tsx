@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
-import { addMonths, addWeeks, format, startOfWeek } from 'date-fns';
+import { addMonths, addWeeks, format, isSameMonth, startOfWeek } from 'date-fns';
 
 // Types
 type CalendarView = 'week' | 'month';
@@ -49,14 +49,28 @@ const initialState: CalendarState = {
 function calendarReducer(state: CalendarState, action: CalendarAction): CalendarState {
   switch (action.type) {
     case 'SELECT_DATE':
-      // When selecting a date in month view, switch to week view
+      // When selecting a date in month view
       if (state.isExpanded) {
-        // Calculate the start of the week containing the selected date
-        const weekStart = startOfWeek(action.payload, { weekStartsOn: 1 });
+        // Always use the exact date that was selected
+        const selectedDate = action.payload;
+
+        // If the selected date is from a different month than the current view
+        if (!isSameMonth(selectedDate, state.viewDate)) {
+          // Update the viewDate to the selected date's month
+          return {
+            ...state,
+            selectedDate,
+            viewDate: selectedDate,
+            isExpanded: false, // Collapse to week view
+          };
+        }
+
+        // If it's in the same month, use the start of the week
+        const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
 
         return {
           ...state,
-          selectedDate: action.payload,
+          selectedDate,
           viewDate: weekStart,
           isExpanded: false, // Collapse to week view
         };
