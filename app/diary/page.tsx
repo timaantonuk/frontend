@@ -5,6 +5,8 @@ import RoundedButton from '@/components/RoundedButton';
 import { Calendar } from '@/components/calendar/Calendar';
 import Image from 'next/image';
 import { useState } from 'react';
+import DiaryModal from '@/components/DiaryModal';
+import { motion } from 'framer-motion';
 
 export default function DiaryPage() {
   // Sample events data
@@ -12,6 +14,8 @@ export default function DiaryPage() {
     '2025-05-15': true,
     '2025-05-12': true,
   });
+
+  const [showDiaryModal, setShowDiaryModal] = useState(false);
 
   const handleDateSelect = (date: Date) => {
     console.log('Selected date:', date);
@@ -46,9 +50,11 @@ export default function DiaryPage() {
           <ChartArea size={36} />
         </RoundedButton>
 
-        <RoundedButton href="/profile">
+        <button onClick={() => setShowDiaryModal(true)} className="bg-secondary p-2 rounded-full">
           <Plus size={36} />
-        </RoundedButton>
+        </button>
+
+        {showDiaryModal && <DiaryModal />}
       </footer>
     </section>
   );
