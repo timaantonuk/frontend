@@ -6,7 +6,6 @@ import { Calendar } from '@/components/calendar/Calendar';
 import Image from 'next/image';
 import { useState } from 'react';
 import DiaryModal from '@/components/DiaryModal';
-import { motion } from 'framer-motion';
 
 export default function DiaryPage() {
   // Sample events data

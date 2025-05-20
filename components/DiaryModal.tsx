@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, FileQuestion, Plus } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 function DiaryModal({}) {
